@@ -1,0 +1,81 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+def convert_bw_jpg_to_eps(input_path, output_path, preview=True, fill_contours=True):
+    """Converts a black & white JPG/PNG to EPS, ensuring proper nested contour filling."""
+    
+    # Load image in grayscale
+    image = cv2.imread(input_path, cv2.IMREAD_GRAYSCALE)
+
+    if image is None:
+        print("Error: Could not load image.")
+        return
+
+    # ✅ Increase contrast using CLAHE (adaptive histogram equalization)
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
+    image = clahe.apply(image)
+
+    # Ensure black is foreground (invert if needed)
+    if np.mean(image) > 127:
+        image = cv2.bitwise_not(image)
+
+    # ✅ Apply a strong binary threshold
+    _, binary = cv2.threshold(image, 128, 255, cv2.THRESH_BINARY)
+
+    # ✅ Use morphological operations to enhance contours
+    kernel = np.ones((3,3), np.uint8)
+    binary = cv2.dilate(binary, kernel, iterations=1)  # Strengthen edges
+    binary = cv2.erode(binary, kernel, iterations=1)   # Remove noise
+
+    # ✅ Detect contours with hierarchy
+    contours, hierarchy = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+
+    # Convert hierarchy to a flat array
+    hierarchy = hierarchy[0] if hierarchy is not None else []
+
+    # Filter out very small contours (noise reduction)
+    min_contour_area = 5  # Adjust to capture finer details
+    contours = [cnt for i, cnt in enumerate(contours) if cv2.contourArea(cnt) > min_contour_area]
+
+    # ✅ Preview detected contours
+    if preview:
+        preview_img = np.stack([binary] * 3, axis=-1)  # Convert grayscale to RGB
+        cv2.drawContours(preview_img, contours, -1, (0, 255, 0), 1)  # Green for contours
+        plt.figure(figsize=(6, 6))
+        plt.imshow(preview_img)
+        plt.title("Detected Contours (Preview)")
+        plt.axis("off")
+        plt.show()
+
+    # ✅ Save as EPS with properly nested filling
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.set_xlim(0, binary.shape[1])
+    ax.set_ylim(binary.shape[0], 0)  # Invert y-axis
+
+    for i, contour in enumerate(contours):
+        contour = contour.squeeze()
+        if len(contour.shape) == 2:
+            if fill_contours:
+                level = 0
+                parent = hierarchy[i][3]
+                while parent != -1:  # Count depth level
+                    level += 1
+                    parent = hierarchy[parent][3]
+                color = 'black' if level % 2 == 0 else 'white'  # Alternate colors based on depth
+                ax.fill(contour[:, 0], contour[:, 1], color)
+            else:
+                ax.plot(contour[:, 0], contour[:, 1], 'k', linewidth=1)  # Only outline
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_frame_on(False)
+    plt.savefig(output_path, format="eps", bbox_inches="tight", pad_inches=0)
+    print(f"✅ EPS saved as: {output_path}")
+
+if __name__ == "__main__":
+    # Example usage
+    input_jpg = "example.png"  # Change to your file
+    output_eps = "example.eps"  # Desired EPS filename
+
+    convert_bw_jpg_to_eps(input_jpg, output_eps, preview=True, fill_contours=True)  # Set to True for filled output
