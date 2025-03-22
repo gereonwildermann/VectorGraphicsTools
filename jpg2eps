@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-def convert_bw_jpg_to_eps(input_path, output_path, preview=True, fill_contours=True):
+def convert_bw_jpg_to_eps(input_path, output_path, preview=True, fill_contours=True, contourwidth=1):
     """Converts a black & white JPG/PNG to EPS, ensuring proper nested contour filling."""
     
     # Load image in grayscale
@@ -65,12 +65,14 @@ def convert_bw_jpg_to_eps(input_path, output_path, preview=True, fill_contours=T
                 color = 'black' if level % 2 == 0 else 'white'  # Alternate colors based on depth
                 ax.fill(contour[:, 0], contour[:, 1], color)
             else:
-                ax.plot(contour[:, 0], contour[:, 1], 'k', linewidth=1)  # Only outline
+                ax.plot(contour[:, 0], contour[:, 1], 'k', linewidth=contourwidth)  # Only outline
 
     ax.set_xticks([])
     ax.set_yticks([])
     ax.set_frame_on(False)
     plt.savefig(output_path, format="eps", bbox_inches="tight", pad_inches=0)
+    plt.title("Created File (EPS)")
+    plt.show()
     print(f"✅ EPS saved as: {output_path}")
 
 if __name__ == "__main__":
