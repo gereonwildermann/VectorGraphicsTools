@@ -31,18 +31,3 @@ input_jpg = "your_image.jpg"
 output_eps = "your_output.eps"
 ```
 
-## Example
-### Input (Black & White Image)
-![Example Input](example_input.jpg)
-
-### Output (EPS Contour Preview)
-![Example Output](example_output.eps)
-
-## Future Enhancements
-🔹 Support for more vector formats (SVG, PDF)  
-🔹 Interactive GUI for manual contour refinement  
-🔹 Batch processing for multiple images  
-
-## License
-This project is licensed under the MIT License.
-
