@@ -2,8 +2,18 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-def convert_bw_jpg_to_eps(input_path, output_path, preview=True, fill_contours=True, contourwidth=1):
-    """Converts a black & white JPG/PNG to EPS, ensuring proper nested contour filling."""
+def convert_bw_jpg_to_eps(input_path, output_path, preview=True, fill_contours=True, contourwidth=1, fill_colors=['black', None]):
+    """Converts a black & white JPG/PNG to EPS, ensuring proper nested contour filling.
+    
+    Args:
+    
+    input_path (str): Path to the input JPG/PNG file.
+    output_path (str): Path to save the output EPS file.
+    preview (bool): Whether to display a preview of detected contours.
+    fill_contours (bool): Whether to fill contours in the output EPS.
+    contourwidth (int): Width of contour lines in the output EPS.
+    fill_colors (list): List of colors to fill contours at different hierarchy levels, starting from the innermost.
+    """
     
     # Load image in grayscale
     image = cv2.imread(input_path, cv2.IMREAD_GRAYSCALE)
@@ -62,8 +72,8 @@ def convert_bw_jpg_to_eps(input_path, output_path, preview=True, fill_contours=T
                 while parent != -1:  # Count depth level
                     level += 1
                     parent = hierarchy[parent][3]
-                color = 'black' if level % 2 == 0 else 'white'  # Alternate colors based on depth
-                ax.fill(contour[:, 0], contour[:, 1], color)
+                color = fill_colors[level]
+                ax.fill(contour[:, 0], contour[:, 1], facecolor=color, edgecolor=color)
             else:
                 ax.plot(contour[:, 0], contour[:, 1], 'k', linewidth=contourwidth)  # Only outline
 
